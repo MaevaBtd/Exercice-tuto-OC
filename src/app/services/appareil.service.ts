@@ -1,35 +1,22 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable()
 export class AppareilService {
 
   appareilsSubject = new Subject<any[]>();
 
-  private appareils = [
-    {
-      id: 1,
-      name: 'Machine à laver',
-      status: 'éteint'
-    },
-    {
-      id: 2,
-      name: 'Frigo',
-      status: 'allumé'
-    },
-    {
-      id: 3,
-      name: 'Ordinateur',
-      status: 'éteint'
-    }
-  ];
+  private appareils = [];
+
+  constructor(private httpClient: HttpClient) {}
 
 getAppareilById(id: number) {
   const appareil = this.appareils.find(
-    (appareilObject)=>{
-      return appareilObject.id === id
+    (appareilObject) => {
+      return appareilObject.id === id;
     }
-  )
+  );
   return appareil;
 }
 
@@ -72,6 +59,33 @@ addAppareil(name: string, status: string) {
   appareilObject.id = this.appareils[(this.appareils.length - 1)].id + 1;
   this.appareils.push(appareilObject);
   this.emitAppareilSubject();
+}
+
+saveAppareilsToServer() {
+  this.httpClient
+    .put('https://tuto-oc-2019.firebaseio.com/appareils.json', this.appareils)
+    .subscribe(
+        () => {
+          console.log('enregistrement terminé!');
+        },
+        (error) => {
+          console.log('Erreur de sauvegarde'+ error);
+        }
+    );
+}
+
+getAppareilsFromServer() {
+  this.httpClient
+    .get<any[]>('https://tuto-oc-2019.firebaseio.com/appareils.json')
+    .subscribe(
+      (response) => {
+        this.appareils = response;
+        this.emitAppareilSubject();
+      },
+      (error) => {
+        console.log('Erreur ! : ' + error);
+      }
+    );
 }
 
 }
